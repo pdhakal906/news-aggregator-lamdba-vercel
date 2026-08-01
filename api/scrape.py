@@ -174,6 +174,11 @@ def scrape_and_store():
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path != "/":
+            self.send_response(404)
+            self.end_headers()
+            return
+
         try:
             scrape_and_store()
 
