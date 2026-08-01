@@ -1,19 +1,29 @@
 import os
 import re
+import json
 import requests
-import psycopg2
 from datetime import datetime
+
+import psycopg2
+from requests.adapters import HTTPAdapter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from psycopg2.extras import execute_values
 from http.server import BaseHTTPRequestHandler
-import json
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 REVALIDATE_SECRET = os.getenv("REVALIDATE_SECRET")
 
 # ---------- GLOBAL REUSABLE OBJECTS (IMPORTANT FOR LAMBDA WARM START) ----------
 
+adapter = HTTPAdapter(
+    pool_connections=50,
+    pool_maxsize=50,
+)
+
 session = requests.Session()
+session.mount("https://", adapter)
+session.mount("http://", adapter)
+
 session.headers.update({"User-Agent": "PostmanRuntime/7.36.0"})
 session.timeout = 30  # default timeout
 
@@ -154,16 +164,12 @@ def scrape_and_store():
     finally:
         cursor.close()
 
-    requests.get("https://www.pratikdhakal906.com.np/news")
-
-    # 2. Clear cache
-    requests.get(
+    session.get("https://www.pratikdhakal906.com.np/news")
+    session.get(
         "https://www.pratikdhakal906.com.np/api/revalidate",
         headers={"x-secret": REVALIDATE_SECRET},
     )
-
-    # 3. Prewarm cache
-    requests.get("https://www.pratikdhakal906.com.np/news")
+    session.get("https://www.pratikdhakal906.com.np/news")
 
 
 class handler(BaseHTTPRequestHandler):
