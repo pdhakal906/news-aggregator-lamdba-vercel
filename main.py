@@ -5,6 +5,8 @@ import psycopg2
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from psycopg2.extras import execute_values
+from http.server import BaseHTTPRequestHandler
+import json
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 REVALIDATE_SECRET = os.getenv("REVALIDATE_SECRET")
@@ -164,12 +166,22 @@ def scrape_and_store():
     requests.get("https://www.pratikdhakal906.com.np/news")
 
 
-from http.server import BaseHTTPRequestHandler
-
-
 class handler(BaseHTTPRequestHandler):
-
     def do_GET(self):
-        scrape_and_store()
-        self.wfile.write("Scraping completed".encode("utf-8"))
-        return
+        try:
+            scrape_and_store()
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+
+            self.wfile.write(json.dumps({"success": True}).encode())
+
+        except Exception as e:
+            print(e)
+
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
