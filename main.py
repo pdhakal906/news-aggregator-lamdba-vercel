@@ -176,7 +176,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write(json.dumps({"success": True}).encode())
-
+            return
         except Exception as e:
             print(e)
 
@@ -185,3 +185,4 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write(json.dumps({"error": str(e)}).encode())
+            return
