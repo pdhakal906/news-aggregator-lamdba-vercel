@@ -162,3 +162,14 @@ def scrape_and_store():
 
     # 3. Prewarm cache
     requests.get("https://www.pratikdhakal906.com.np/news")
+
+
+from http.server import BaseHTTPRequestHandler
+
+
+class handler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        scrape_and_store()
+        self.wfile.write("Scraping completed".encode("utf-8"))
+        return
